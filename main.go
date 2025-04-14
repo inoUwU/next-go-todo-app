@@ -54,7 +54,7 @@ func main() {
 	r.POST("/todos", createTodo)
 
 	// 一覧取得
-	r.POST("/todos", getTodos)
+	r.GET("/todos", getTodos)
 
 	// サーバー起動
 	r.Run(":8080")
