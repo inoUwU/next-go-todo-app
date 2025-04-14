@@ -16,7 +16,6 @@ type Todo struct {
 
 var db *gorm.DB
 
-var db *gorm.DB
 var err error
 
 // DBを初期化する
