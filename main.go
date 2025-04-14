@@ -16,11 +16,14 @@ type Todo struct {
 
 var db *gorm.DB
 
+var db *gorm.DB
+var err error
+
 // DBを初期化する
 func initDB() {
-	db, err := gorm.Open(sqlite.Open("todo.db"), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open("todo.db"), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic("failed to connect database: " + err.Error())
 	}
 
 	// テーブルが無ければ自動で生成される
