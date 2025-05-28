@@ -2,7 +2,9 @@ package main
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -51,6 +53,27 @@ func main() {
 	r := gin.Default()
 
 	initDB()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+		},
+		AllowMethods: []string{
+			"POST",
+			"GET",
+			"OPTIONS",
+		},
+		AllowHeaders: []string{
+			"Access-Control-Allow-Credentials",
+			"Access-Control-Allow-Headers",
+			"Content-Type",
+			"Content-Length",
+			"Accept-Encoding",
+			"Authorization",
+		},
+		AllowCredentials: false,
+		MaxAge:           24 * time.Hour,
+	}))
 
 	// 新規追加
 	r.POST("/todos", createTodo)
