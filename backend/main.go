@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -47,6 +48,23 @@ func getTodos(c *gin.Context) {
 	var todos []Todo
 	db.Find(&todos)
 	c.JSON(http.StatusOK, todos)
+}
+
+// TODO削除
+func deleteTodo(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+	var todo Todo
+	if err := db.First(&todo, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+		return
+	}
+
+	db.Delete(&todo)
+	c.JSON(http.StatusOK, gin.H{"message": "Todo deleted"})
 }
 
 func main() {
