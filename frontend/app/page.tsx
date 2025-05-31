@@ -8,9 +8,9 @@ type TODO = {
   completed: boolean;
 };
 
-// TODO Do not use useEffects
 export default function TodoPage() {
   const [todos, setTodos] = useState<TODO[]>([]);
+  const [input, setInput] = useState<string>('');
 
   // Todo取得
   useEffect(() => {
@@ -19,19 +19,53 @@ export default function TodoPage() {
 
   const fetchTodos = async () => {
     const res = await fetch('http://localhost:8080/todos');
-    const data = await res.json();
+    const data: Array<TODO> = await res.json();
+    // 新しいTODOが上に来るように
+    data.sort((x: TODO, y: TODO) => parseInt(y.id) - parseInt(x.id));
     setTodos(data);
   };
 
-  const handleToggleCompleted = (todo: TODO) => {
-    setTodos((prevTodos) => {
-      return prevTodos.map((t) => {
-        if (t.id === todo.id) {
-          return { ...t, completed: !t.completed };
-        }
-        return t;
-      });
+  const handleToggleCompleted = async (todo: TODO) => {
+    todo.completed = !todo.completed;
+    await fetch('http://localhost:8080/todos', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(todo),
     });
+
+    //入れた値をリセット
+    setInput('');
+    //全Todoリストを再取得する
+    fetchTodos();
+  };
+
+  const handleAddTodo = async () => {
+    await fetch('http://localhost:8080/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: input,
+        completed: false,
+      }),
+    });
+
+    //入れた値をリセット
+    setInput('');
+    //全Todoリストを再取得する
+    fetchTodos();
+  };
+
+  const handleDeleteTodo = async (todo: TODO) => {
+    console.log(todo);
+    await fetch(`http://localhost:8080/todos/${todo.id}`, {
+      method: 'DELETE',
+    });
+
+    fetchTodos();
   };
 
   return (
@@ -39,6 +73,23 @@ export default function TodoPage() {
       <h1 className="text-2xl font-semibold text-center text-white mb-6">
         📋 Todo List
       </h1>
+      <div className="flex items-center gap-2 mb-6">
+        <input
+          className="flex-1 p-2 rounded bg-gray-700 text-white placeholder-gray-400"
+          type="text"
+          placeholder="新しいTodoを追加..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={handleAddTodo}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+        >
+          追加
+        </button>
+      </div>
+
       <ul className="space-y-4">
         {todos.map((todo) => (
           <li
@@ -46,7 +97,6 @@ export default function TodoPage() {
             className="flex justify-between items-center p-4 bg-gray-800 border border-gray-700 rounded-xl shadow-sm hover:shadow-md transition"
           >
             <div className="flex items-center">
-              {/* チェックボックス */}
               <input
                 type="checkbox"
                 checked={todo.completed}
@@ -57,6 +107,12 @@ export default function TodoPage() {
                 {todo.title}
               </span>
             </div>
+            <button
+              onClick={() => handleDeleteTodo(todo)}
+              className={`px-3 py-1 rounded-full text-sm font-semibold text-white`}
+            >
+              削除
+            </button>
           </li>
         ))}
       </ul>
