@@ -67,6 +67,26 @@ func deleteTodo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Todo deleted"})
 }
 
+func updateTodo(c *gin.Context) {
+	var req Todo
+	if err := c.Copy().ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	var todo Todo
+	if err := db.Where(&Todo{ID: req.ID}).Find(&todo).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+		return
+	}
+
+	todo.Completed = req.Completed
+	todo.Title = req.Title
+	db.Save(&todo)
+
+	// 更新後の値を返す
+	c.JSON(http.StatusOK, todo)
+}
+
 func main() {
 	r := gin.Default()
 
@@ -80,6 +100,8 @@ func main() {
 			"POST",
 			"GET",
 			"OPTIONS",
+			"DELETE",
+			"PUT",
 		},
 		AllowHeaders: []string{
 			"Access-Control-Allow-Credentials",
@@ -98,6 +120,12 @@ func main() {
 
 	// 一覧取得
 	r.GET("/todos", getTodos)
+
+	// 削除
+	r.DELETE("/todos/:id", deleteTodo)
+
+	// 更新
+	r.PUT("/todos/:id", updateTodo)
 
 	// サーバー起動
 	r.Run(":8080")
